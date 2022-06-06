@@ -8,7 +8,7 @@ export const db = app.database();
 export const auth = app.auth();
 export const fs = app.firestore();
 export const bucket = app.storage().bucket();
-export const apkBucket = app.storage().bucket("bmi-apks");
+export const apkBucket = app.storage().bucket("vincetechnosoft-applications");
 export const fieldValue = firestore.FieldValue;
 export const fieldPath = firestore.FieldPath;
 
@@ -101,3 +101,7 @@ export async function getUser({
     return await auth.createUser({ phoneNumber });
   }
 }
+
+export const claimType = {
+  distributor: "D",
+};

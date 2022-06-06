@@ -9,6 +9,7 @@ import {
   bucket,
   timeStamp,
   validatePhoneForE164,
+  claimType,
 } from "../utils";
 
 async function applyClaims(
@@ -30,8 +31,8 @@ async function applyClaims(
     const ref = db
       .ref("pendingClaimsOfPhoneNumber")
       .child(phoneNumber)
-      .child("b2b")
-      .child(compneyID);
+      .child(`${claimType.distributor}-${compneyID}`);
+
     if (!role || role == "disable") {
       return await ref.remove().then(
         () => null,
@@ -45,31 +46,32 @@ async function applyClaims(
   }
   // ! apply claim in live
   const customClaims = user.customClaims ?? {};
-  const b2bClaims = (customClaims.b2b ??= {});
-  const currentClaims = b2bClaims[compneyID];
+  const distributorClaims = (customClaims[claimType.distributor] ??= {});
+  const currentClaims = distributorClaims[compneyID];
   if (role === null) {
     // ! already have no claims then return #true
     if (currentClaims === undefined) return true;
-    delete b2bClaims[compneyID];
+    delete distributorClaims[compneyID];
   } else if (role === "disable") {
     // ! already is disabled then return #true
     if (currentClaims === -1) return true;
-    b2bClaims[compneyID] = -1;
+    distributorClaims[compneyID] = -1;
   } else if (role === "owner") {
     // ! already is owner then return #true
     if (currentClaims === 0) return true;
     // ! already have some active claim then return #false
     if (currentClaims !== -1 && currentClaims !== undefined) return false;
-    b2bClaims[compneyID] = 0;
+    distributorClaims[compneyID] = 0;
   } else {
     // ! already is worker then return #true
     if (currentClaims === 1) return true;
     // ! already have some active claim then return #false
     if (currentClaims !== -1 && currentClaims !== undefined) return false;
-    b2bClaims[compneyID] = 1;
+    distributorClaims[compneyID] = 1;
   }
-  // ! if no info in b2b node if customeClaims then remove node
-  if (!Object.keys(b2bClaims).length) delete customClaims.b2b;
+  // ! if no info in distributor node if customeClaims then remove node
+  if (!Object.keys(distributorClaims).length)
+    delete customClaims[claimType.distributor];
   try {
     if (!Object.keys(customClaims).length) {
       // ! if no info in customClaims then remove claims
@@ -85,7 +87,7 @@ async function applyClaims(
   }
 }
 
-export default async function listenB2BCompney(
+export default async function DISTRIBUTORlistenCompney(
   changes: Change<DocumentSnapshot>,
   context: EventContext
 ) {
@@ -168,7 +170,7 @@ export default async function listenB2BCompney(
     // ! if compney is created
     updateCurrentDoc["logsInCurrentPage"] = 1;
     updateCurrentDoc["currentLogPageNum"] = 1;
-    commits[`B2B/${compneyID}/LOGS/page-1`] = {
+    commits[`DISTRIBUTOR/${compneyID}/LOGS/page-1`] = {
       data: {
         [timeStamp()]: JSON.stringify({
           message: "Enterprise Created",
@@ -177,10 +179,19 @@ export default async function listenB2BCompney(
       },
       type: "create",
     };
-    commits[`B2B/${compneyID}/DATA/ORDERS`] = { data: {}, type: "create" };
-    commits[`B2B/${compneyID}/DATA/PRODUCTS`] = { data: {}, type: "create" };
-    commits[`B2B/${compneyID}/DATA/STATE`] = { data: {}, type: "create" };
-    commits["CONFIG/B2B"] = {
+    commits[`DISTRIBUTOR/${compneyID}/DATA/ORDERS`] = {
+      data: {},
+      type: "create",
+    };
+    commits[`DISTRIBUTOR/${compneyID}/DATA/PRODUCTS`] = {
+      data: {},
+      type: "create",
+    };
+    commits[`DISTRIBUTOR/${compneyID}/DATA/STATE`] = {
+      data: {},
+      type: "create",
+    };
+    commits["CONFIG/DISTRIBUTOR"] = {
       data: {
         [compneyID]: JSON.stringify({
           name: `${changes.after.get("name")}`,
@@ -190,19 +201,21 @@ export default async function listenB2BCompney(
     };
   } else if (!changes.after.exists) {
     // ! if compney is deleted
-    commits["CONFIG/B2B"] = {
+    commits["CONFIG/DISTRIBUTOR"] = {
       data: { [compneyID]: fieldValue.delete() },
       type: "update",
     };
     for (let page = 1; page < changes.before.get("currentLogPageNum"); page++) {
-      commits[`B2B/${compneyID}/LOGS/page-${page}`] = { type: "delete" };
+      commits[`DISTRIBUTOR/${compneyID}/LOGS/page-${page}`] = {
+        type: "delete",
+      };
     }
-    commits[`B2B/${compneyID}/DATA/ORDERS`] = { type: "delete" };
-    commits[`B2B/${compneyID}/DATA/PRODUCTS`] = { type: "delete" };
-    commits[`B2B/${compneyID}/DATA/STATE`] = { type: "delete" };
+    commits[`DISTRIBUTOR/${compneyID}/DATA/ORDERS`] = { type: "delete" };
+    commits[`DISTRIBUTOR/${compneyID}/DATA/PRODUCTS`] = { type: "delete" };
+    commits[`DISTRIBUTOR/${compneyID}/DATA/STATE`] = { type: "delete" };
     tasks.push(
       bucket
-        .deleteFiles({ prefix: `B2B-REPORTS/${compneyID}` })
+        .deleteFiles({ prefix: `DISTRIBUTOR-REPORTS/${compneyID}` })
         .then(() => null, onError)
     );
   } else {
@@ -218,7 +231,7 @@ export default async function listenB2BCompney(
       oldDisabled !== newDisabled
     ) {
       // ! if compney info changes
-      commits["CONFIG/B2B"] = {
+      commits["CONFIG/DISTRIBUTOR"] = {
         data: {
           [compneyID]: JSON.stringify({
             name: `${newName}`,
@@ -235,11 +248,11 @@ export default async function listenB2BCompney(
       updateCurrentDoc["ex-workers"] = fieldValue.delete();
       updateCurrentDoc["ex-seller"] = fieldValue.delete();
       updateCurrentDoc["ex-buyers"] = fieldValue.delete();
-      commits[`B2B/${compneyID}/DATA/ORDERS`] = {
+      commits[`DISTRIBUTOR/${compneyID}/DATA/ORDERS`] = {
         data: {},
         type: "set",
       };
-      commits[`B2B/${compneyID}/DATA/STATE`] = {
+      commits[`DISTRIBUTOR/${compneyID}/DATA/STATE`] = {
         data: {
           inventory: {},
           reset: fieldValue.increment(1),
@@ -253,7 +266,7 @@ export default async function listenB2BCompney(
       };
       tasks.push(
         bucket
-          .deleteFiles({ prefix: `B2B-REPORTS/${compneyID}` })
+          .deleteFiles({ prefix: `DISTRIBUTOR-REPORTS/${compneyID}` })
           .then(() => null, onError)
       );
     } else {
@@ -329,7 +342,7 @@ export default async function listenB2BCompney(
     if (Object.keys(updateCurrentDoc).length && changes.after.exists) {
       // ! if compney doc is updated from fn change "updatedFromLisner"
       updateCurrentDoc["updatedFromLisner"] = fieldValue.increment(1);
-      batch.update(fs.doc(`B2B/${compneyID}`), updateCurrentDoc);
+      batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), updateCurrentDoc);
     }
     for (const docPath in commits) {
       if (Object.prototype.hasOwnProperty.call(commits, docPath)) {
@@ -358,7 +371,7 @@ export default async function listenB2BCompney(
     // ! if compney doc is updated from fn change "updatedFromLisner"
     updateCurrentDoc["updatedFromLisner"] = fieldValue.increment(1);
     await fs
-      .doc(`B2B/${compneyID}`)
+      .doc(`DISTRIBUTOR/${compneyID}`)
       .update(updateCurrentDoc)
       .then(() => null)
       .catch(onError);

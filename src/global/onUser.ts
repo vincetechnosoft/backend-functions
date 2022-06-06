@@ -1,6 +1,14 @@
 import { EventContext } from "firebase-functions/v1";
 import { UserRecord } from "firebase-functions/v1/auth";
-import { auth, db, fieldValue, fs, bucket, timeStamp } from "../utils";
+import {
+  auth,
+  db,
+  fieldValue,
+  fs,
+  bucket,
+  timeStamp,
+  claimType,
+} from "../utils";
 
 export default {
   async create(user: UserRecord, _: EventContext) {
@@ -15,18 +23,20 @@ export default {
         () => false
       );
       const batch = fs.batch();
-      const b2bClaims = claims.b2b;
-      if (b2bClaims) {
-        for (const compneyID in b2bClaims) {
-          if (Object.prototype.hasOwnProperty.call(b2bClaims, compneyID)) {
-            const role = b2bClaims[compneyID];
+      const distributorClaims = claims[claimType.distributor];
+      if (distributorClaims) {
+        for (const compneyID in distributorClaims) {
+          if (
+            Object.prototype.hasOwnProperty.call(distributorClaims, compneyID)
+          ) {
+            const role = distributorClaims[compneyID];
             if (role === 0) {
-              batch.update(fs.doc(`B2B/${compneyID}`), {
+              batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
                 "owner.status": res ? 1 : -1,
                 updatedFromLisner: fieldValue.increment(1),
               });
             } else if (role === 1) {
-              batch.update(fs.doc(`B2B/${compneyID}`), {
+              batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
                 [`workers.${phoneNumber}.status`]: res ? 1 : -1,
                 updatedFromLisner: fieldValue.increment(1),
               });
@@ -47,19 +57,21 @@ export default {
     const claims = user.customClaims;
     if (!phoneNumber || !claims) return;
     const batch = fs.batch();
-    const b2bClaims = claims.b2b;
-    if (b2bClaims) {
-      for (const compneyID in b2bClaims) {
-        if (Object.prototype.hasOwnProperty.call(b2bClaims, compneyID)) {
-          const role = b2bClaims[compneyID];
+    const distributorClaims = claims[claimType.distributor];
+    if (distributorClaims) {
+      for (const compneyID in distributorClaims) {
+        if (
+          Object.prototype.hasOwnProperty.call(distributorClaims, compneyID)
+        ) {
+          const role = distributorClaims[compneyID];
           if (role === 0) {
-            batch.update(fs.doc(`B2B/${compneyID}`), {
+            batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
               "owner.phoneNumber": null,
               "owner.status": fieldValue.delete(),
               updatedFromLisner: fieldValue.increment(1),
             });
           } else if (role === 1) {
-            batch.update(fs.doc(`B2B/${compneyID}`), {
+            batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
               [`workers.${phoneNumber}`]: fieldValue.delete(),
             });
           }

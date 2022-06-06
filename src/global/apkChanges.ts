@@ -15,7 +15,7 @@ export default async function apkChanges(
   const name = object.name;
   if (!name) return;
   if (!name.includes("/") && name.endsWith(".apk")) {
-    // ? b2b-main.apk ==> b2b-main
+    // ? distributor-main.apk ==> distributor-main
     const _name = name.substring(0, name.length - 4);
     const path = await import("path");
     const os = await import("os");
@@ -55,30 +55,30 @@ export default async function apkChanges(
   
   res: {
     kind: "storage#objectAccessControl",
-    object: "ICONS/b2b-main.png",
+    object: "ICONS/distributor-main.png",
     generation: "1651597500536165",
-    id: "bmi-apks/ICONS/b2b-main.png/1651597500536165/allUsers",
-    selfLink: "https://www.googleapis.com/storage/v1/b/bmi-apks/o/ICONS%2Fb2b-main.png/acl/allUsers",
-    bucket: "bmi-apks",
+    id: "vincetechnosoft-applications/ICONS/distributor-main.png/1651597500536165/allUsers",
+    selfLink: "https://www.googleapis.com/storage/v1/b/vincetechnosoft-applications/o/ICONS%2Fdistributor-main.png/acl/allUsers",
+    bucket: "vincetechnosoft-applications",
     entity: "allUsers",
     role: "READER",
     etag: "COWq05Low/cCEAI=",
   },
   object: {
-    bucket: "bmi-apks",
-    contentDisposition: "inline; filename*=utf-8''b2b-main.png",
+    bucket: "vincetechnosoft-applications",
+    contentDisposition: "inline; filename*=utf-8''distributor-main.png",
     contentType: "image/png",
     crc32c: "OL0KmA==",
     etag: "COWq05Low/cCEAE=",
     generation: "1651597500536165",
-    id: "bmi-apks/ICONS/b2b-main.png/1651597500536165",
+    id: "vincetechnosoft-applications/ICONS/distributor-main.png/1651597500536165",
     kind: "storage#object",
     md5Hash: "OaUtk5/E4m8RiO82t7LBkw==",
-    mediaLink: "https://www.googleapis.com/download/storage/v1/b/bmi-apks/o/ICONS%2Fb2b-main.png?generation=1651597500536165&alt=media",
+    mediaLink: "https://www.googleapis.com/download/storage/v1/b/vincetechnosoft-applications/o/ICONS%2Fdistributor-main.png?generation=1651597500536165&alt=media",
     metadata: { firebaseStorageDownloadTokens: "0439858e-d2c3-4e86-b2c4-ee785ff8500f" },
     metageneration: "1",
-    name: "ICONS/b2b-main.png",
-    selfLink: "https://www.googleapis.com/storage/v1/b/bmi-apks/o/ICONS%2Fb2b-main.png",
+    name: "ICONS/distributor-main.png",
+    selfLink: "https://www.googleapis.com/storage/v1/b/vincetechnosoft-applications/o/ICONS%2Fdistributor-main.png",
     size: "23329",
     storageClass: "REGIONAL",
     timeCreated: "2022-05-03T17:05:00.543Z",

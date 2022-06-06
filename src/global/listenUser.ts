@@ -1,11 +1,24 @@
 import { Change, EventContext, logger } from "firebase-functions/v1";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
-import { bucket } from "../utils";
+import DISTRIBUTORlistenUser from "../DISTRIBUTOR/listenUser";
+import { bucket, handle } from "../utils";
+
+async function allUserLisiners(
+  changes: Change<DocumentSnapshot>,
+  context: EventContext
+) {
+  await Promise.all(
+    [DISTRIBUTORlistenUser].map(async function (fn) {
+      return handle(fn)(changes, context);
+    })
+  );
+}
 
 export default async function listenUserGlobaly(
   changes: Change<DocumentSnapshot>,
   context: EventContext
 ) {
+  const lisiners = allUserLisiners(changes, context);
   const { uid } = context.params;
   const { default: sizeof } = await import("firestore-size");
   const data = changes.after.data()!;
@@ -24,8 +37,8 @@ export default async function listenUserGlobaly(
         return false;
       }
     );
-
     if (!isDone) return;
     await changes.after.ref.set({ lastPageNumber: newPageNumber });
   }
+  await lisiners;
 }

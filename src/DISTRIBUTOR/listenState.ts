@@ -2,7 +2,7 @@ import { Change, EventContext } from "firebase-functions/v1";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 import { getUser, fieldValue, fs, timeStamp } from "../utils";
 
-export default async function listenB2BState(
+export default async function DISTRIBUTORlistenState(
   changes: Change<DocumentSnapshot>,
   context: EventContext
 ) {
@@ -52,10 +52,10 @@ export default async function listenB2BState(
           try {
             const user = await getUser({ phoneNumber });
             return await fs.doc(`USERS/${user.uid}`).update({
-              [`b2b.${compneyID}.m`]: fieldValue.arrayUnion(
+              [`distributor.${compneyID}.m`]: fieldValue.arrayUnion(
                 JSON.stringify(["reset", { tS: timeStamp(), dA: due }])
               ),
-              [`b2b.${compneyID}.dA`]: fieldValue.delete(),
+              [`distributor.${compneyID}.dA`]: fieldValue.delete(),
               updatedFromLisner: fieldValue.increment(1),
             });
           } catch {
@@ -98,15 +98,15 @@ export default async function listenB2BState(
           const due = changes.after.get(`sellOutDue.${phoneNumber}`);
           try {
             return await ref.update({
-              [`b2b.${compneyID}.m`]: fieldValue.arrayUnion(
+              [`distributor.${compneyID}.m`]: fieldValue.arrayUnion(
                 ...entries.map((e) => JSON.stringify(["entry", e]))
               ),
-              [`b2b.${compneyID}.dA`]: due,
+              [`distributor.${compneyID}.dA`]: due,
               updatedFromLisner: fieldValue.increment(1),
             });
           } catch {
             return await ref.create({
-              b2b: {
+              distributor: {
                 [compneyID]: {
                   m: [...entries.map((e) => JSON.stringify(["entry", e]))],
                   dA: due,
@@ -121,10 +121,10 @@ export default async function listenB2BState(
       tasks.push(
         getUser({ phoneNumber }).then(function (user) {
           return fs.doc(`USERS/${user.uid}`).update({
-            [`b2b.${compneyID}.m`]: fieldValue.arrayUnion(
+            [`distributor.${compneyID}.m`]: fieldValue.arrayUnion(
               ...entries.map((e) => JSON.stringify(["entry-deleted", e]))
             ),
-            [`b2b.${compneyID}.dA`]: changes.after.get(
+            [`distributor.${compneyID}.dA`]: changes.after.get(
               `sellOutDue.${phoneNumber}`
             ),
             updatedFromLisner: fieldValue.increment(1),
@@ -148,10 +148,10 @@ export default async function listenB2BState(
         try {
           const user = await getUser({ phoneNumber });
           return await fs.doc(`USERS/${user.uid}`).update({
-            [`b2b.${compneyID}.m`]: fieldValue.arrayUnion(
+            [`distributor.${compneyID}.m`]: fieldValue.arrayUnion(
               JSON.stringify(["delete", { tS: timeStamp(), dA: due }])
             ),
-            [`b2b.${compneyID}.dA`]: fieldValue.delete(),
+            [`distributor.${compneyID}.dA`]: fieldValue.delete(),
             updatedFromLisner: fieldValue.increment(1),
           });
         } catch {

@@ -2,7 +2,7 @@ import { Change, EventContext } from "firebase-functions/v1";
 import { QueryDocumentSnapshot } from "firebase-functions/v1/firestore";
 import { fieldValue, fs, timeStamp } from "../utils";
 
-export default async function listenB2BProducts(
+export default async function DISTRIBUTORlistenProducts(
   changes: Change<QueryDocumentSnapshot>,
   context: EventContext
 ) {
@@ -22,7 +22,7 @@ export default async function listenB2BProducts(
     }
   }
   if (itemDeleted.length || itemCreated.length) {
-    const compneyRef = fs.doc(`B2B/${compneyID}`);
+    const compneyRef = fs.doc(`DISTRIBUTOR/${compneyID}`);
     const stateRef = compneyRef.collection("DATA").doc("STATE");
     fs.runTransaction(async function (transaction) {
       const stateDocChanges: { [path: string]: any } = {

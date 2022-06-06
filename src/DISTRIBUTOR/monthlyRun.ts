@@ -1,17 +1,19 @@
 import { EventContext, logger } from "firebase-functions/v1";
 import { fieldValue, formatedDate, fromNow, fs, bucket } from "../utils";
 
-export default async function monthlyB2BRun(_: EventContext) {
+export default async function DISTRIBUTORmonthlyRun(_: EventContext) {
   const currentMonth = formatedDate(fromNow({ day: -1 })).substring(0, 7);
-  const b2b = (await fs.doc("CONFIG/B2B").get()).data();
+  const distributor = (await fs.doc("CONFIG/DISTRIBUTOR").get()).data();
   const tasks: Array<Promise<null>> = [];
 
-  if (typeof b2b === "object" && b2b !== null) {
-    for (const compneyID of Object.keys(b2b)) {
-      const compneyRef = fs.doc(`B2B/${compneyID}`);
-      const stateRef = fs.doc(`B2B/${compneyID}/DATA/STATE`);
-      // const ordersRef = fs.doc(`B2B/${compneyID}/DATA/ORDERS`);
-      const file = bucket.file(`B2B-REPORTS/${compneyID}/${currentMonth}.json`);
+  if (typeof distributor === "object" && distributor !== null) {
+    for (const compneyID of Object.keys(distributor)) {
+      const compneyRef = fs.doc(`DISTRIBUTOR/${compneyID}`);
+      const stateRef = fs.doc(`DISTRIBUTOR/${compneyID}/DATA/STATE`);
+      // const ordersRef = fs.doc(`DISTRIBUTOR/${compneyID}/DATA/ORDERS`);
+      const file = bucket.file(
+        `DISTRIBUTOR-REPORTS/${compneyID}/${currentMonth}.json`
+      );
       tasks.push(
         fs.runTransaction(async function (transaction) {
           const [
