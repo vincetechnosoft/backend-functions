@@ -1,6 +1,6 @@
 import { Change, EventContext } from "firebase-functions/v1";
 import { DataSnapshot } from "firebase-functions/v1/database";
-import { auth, log, validatePhoneForE164 } from "../utils";
+import { auth, log, setUserClaims, validatePhoneForE164 } from "../utils";
 
 export default async function applyClaimsToPhoneNumber(
   changes: Change<DataSnapshot>,
@@ -36,7 +36,7 @@ export default async function applyClaimsToPhoneNumber(
     if (
       user &&
       (await logInError(
-        auth.setCustomUserClaims(user.uid, claim).then(() => true),
+        setUserClaims(user.uid, claim).then(() => true),
         "while applying claims"
       ))
     ) {

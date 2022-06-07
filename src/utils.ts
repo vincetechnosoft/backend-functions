@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { firestore } from "firebase-admin";
+import { database, firestore } from "firebase-admin";
 import * as functions from "firebase-functions";
 
 const app = admin.initializeApp();
@@ -85,6 +85,18 @@ export function handle(handler: (...args: any[]) => any) {
         );
     }
   };
+}
+
+export async function setUserClaims(
+  uid: string,
+  claims: { [key: string]: string } | null
+) {
+  await auth.setCustomUserClaims(uid, claims);
+  await db
+    .ref("userClaimsUpdateCounter")
+    .child(uid)
+    .set(database.ServerValue.increment(1))
+    .catch(() => null);
 }
 
 export async function getUser({

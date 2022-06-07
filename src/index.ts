@@ -5,7 +5,6 @@ import DISTRIBUTORmonthlyRun from "./DISTRIBUTOR/monthlyRun";
 import DISTRIBUTORlistenCompney from "./DISTRIBUTOR/listenCompney";
 import DISTRIBUTORlistenProducts from "./DISTRIBUTOR/listenProducts";
 import DISTRIBUTORlistenState from "./DISTRIBUTOR/listenState";
-// import DISTRIBUTORlistenUser from "./DISTRIBUTOR/listenUser";
 
 // ? global imports
 import applyClaimsToPhoneNumber from "./global/applyClaimsToPhoneNumber";
@@ -41,6 +40,3 @@ exports.DISTRIBUTORmonthlyRun = indianFn.pubsub
   .schedule("2 0 1 * *")
   .timeZone("Asia/Kolkata")
   .onRun(handle(DISTRIBUTORmonthlyRun));
-// exports.DISTRIBUTORlistenUser = indianFn.firestore
-//   .document("USERS/{uid}")
-//   .onUpdate(handle(DISTRIBUTORlistenUser));

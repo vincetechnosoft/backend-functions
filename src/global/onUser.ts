@@ -1,13 +1,13 @@
 import { EventContext } from "firebase-functions/v1";
 import { UserRecord } from "firebase-functions/v1/auth";
 import {
-  auth,
   db,
   fieldValue,
   fs,
   bucket,
   timeStamp,
   claimType,
+  setUserClaims,
 } from "../utils";
 
 export default {
@@ -18,7 +18,7 @@ export default {
     const claims = (await (await ref.get().catch(() => null))?.val()) ?? null;
     await ref.remove().catch(() => null);
     if (claims) {
-      const res = await auth.setCustomUserClaims(user.uid, claims).then(
+      const res = await setUserClaims(user.uid, claims).then(
         () => true,
         () => false
       );
