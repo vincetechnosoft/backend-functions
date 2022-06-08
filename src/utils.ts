@@ -1,6 +1,8 @@
 import * as admin from "firebase-admin";
 import { database, firestore } from "firebase-admin";
 import * as functions from "firebase-functions";
+import { Change } from "firebase-functions";
+import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 
 const app = admin.initializeApp();
 
@@ -117,3 +119,28 @@ export async function getUser({
 export const claimType = {
   distributor: "D",
 };
+
+export interface obj<T = any> {
+  [key: string]: T;
+}
+export function getObject<T = any>(
+  changes: Change<DocumentSnapshot>,
+  path: string
+): [obj<T>, obj<T>] {
+  let oldObj = changes.before.get(path);
+  if (typeof oldObj !== "object" || oldObj === null) oldObj = {};
+  let newObj = changes.after.get(path);
+  if (typeof newObj !== "object" || newObj === null) newObj = {};
+  return [oldObj, newObj];
+}
+
+export function getArray<T = any>(
+  changes: Change<DocumentSnapshot>,
+  path: string
+): [T[], T[]] {
+  let oldObj = changes.before.get(path);
+  if (!Array.isArray(oldObj)) oldObj = [];
+  let newObj = changes.after.get(path);
+  if (!Array.isArray(newObj)) newObj = [];
+  return [oldObj, newObj];
+}

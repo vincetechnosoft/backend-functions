@@ -1,21 +1,14 @@
 import { EventContext } from "firebase-functions/v1";
 import { UserRecord } from "firebase-functions/v1/auth";
-import {
-  db,
-  fieldValue,
-  fs,
-  bucket,
-  timeStamp,
-  claimType,
-  setUserClaims,
-} from "../utils";
+import { db, fs, bucket, timeStamp, setUserClaims } from "../utils";
+import DISTRIBUTORonUser from "../DISTRIBUTOR/onUser";
 
 export default {
   async create(user: UserRecord, _: EventContext) {
     const phoneNumber = user.phoneNumber;
     if (!phoneNumber) return;
     const ref = db.ref("pendingClaimsOfPhoneNumber").child(phoneNumber);
-    const claims = (await (await ref.get().catch(() => null))?.val()) ?? null;
+    const claims = (await ref.get().catch(() => null))?.val() ?? null;
     await ref.remove().catch(() => null);
     if (claims) {
       const res = await setUserClaims(user.uid, claims).then(
@@ -23,27 +16,9 @@ export default {
         () => false
       );
       const batch = fs.batch();
-      const distributorClaims = claims[claimType.distributor];
-      if (distributorClaims) {
-        for (const compneyID in distributorClaims) {
-          if (
-            Object.prototype.hasOwnProperty.call(distributorClaims, compneyID)
-          ) {
-            const role = distributorClaims[compneyID];
-            if (role === 0) {
-              batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
-                "owner.status": res ? 1 : -1,
-                updatedFromLisner: fieldValue.increment(1),
-              });
-            } else if (role === 1) {
-              batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
-                [`workers.${phoneNumber}.status`]: res ? 1 : -1,
-                updatedFromLisner: fieldValue.increment(1),
-              });
-            }
-          }
-        }
-      }
+
+      DISTRIBUTORonUser.create({ batch, claims, phoneNumber, res });
+
       batch.set(
         fs.doc(`USERS/${user.uid}`),
         { createdAt: timeStamp() },
@@ -57,27 +32,9 @@ export default {
     const claims = user.customClaims;
     if (!phoneNumber || !claims) return;
     const batch = fs.batch();
-    const distributorClaims = claims[claimType.distributor];
-    if (distributorClaims) {
-      for (const compneyID in distributorClaims) {
-        if (
-          Object.prototype.hasOwnProperty.call(distributorClaims, compneyID)
-        ) {
-          const role = distributorClaims[compneyID];
-          if (role === 0) {
-            batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
-              "owner.phoneNumber": null,
-              "owner.status": fieldValue.delete(),
-              updatedFromLisner: fieldValue.increment(1),
-            });
-          } else if (role === 1) {
-            batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
-              [`workers.${phoneNumber}`]: fieldValue.delete(),
-            });
-          }
-        }
-      }
-    }
+
+    DISTRIBUTORonUser.delete({ batch, claims, phoneNumber });
+
     batch.delete(fs.doc(`USERS/${user.uid}`));
     await batch.commit();
     await bucket.deleteFiles({ prefix: `USERS-REPORTS/${user.uid}` });

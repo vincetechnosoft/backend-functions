@@ -11,11 +11,9 @@ import {
   validatePhoneForE164,
   claimType,
   setUserClaims,
+  obj,
+  getObject,
 } from "../utils";
-
-interface obj {
-  [key: string]: any;
-}
 
 async function applyClaims(
   phoneNumber: string,
@@ -80,17 +78,6 @@ async function applyClaims(
     onError(error);
     return false;
   }
-}
-
-function getObject(
-  changes: Change<DocumentSnapshot>,
-  path: string
-): [obj, obj] {
-  let oldObj = changes.before.get(path);
-  if (typeof oldObj !== "object" || oldObj === null) oldObj = {};
-  let newObj = changes.after.get(path);
-  if (typeof newObj !== "object" || newObj === null) newObj = {};
-  return [oldObj, newObj];
 }
 
 function updateRoles({
