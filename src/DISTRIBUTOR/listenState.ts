@@ -104,7 +104,9 @@ function updateEntriesInUserDoc({
         const due = changes.after.get(`sellOutDue.${phoneNumber}`);
         try {
           return await ref.update({
-            [`distributor.${compneyID}.m`]: fieldValue.arrayUnion(...message),
+            [`distributor.${compneyID}.m`]: fieldValue.arrayUnion(
+              ...message.map((x) => JSON.stringify(x))
+            ),
             [`distributor.${compneyID}.dA`]: due,
             updatedFromLisner: fieldValue.increment(1),
           });
@@ -112,7 +114,7 @@ function updateEntriesInUserDoc({
           return await ref.create({
             distributor: {
               [compneyID]: {
-                m: [...message],
+                m: message.map((x) => JSON.stringify(x)),
                 dA: due,
               },
             },
