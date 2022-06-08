@@ -439,49 +439,48 @@ export default async function DISTRIBUTORlistenCompney(
         updateCurrentDoc,
       });
     }
+  }
+  // ! wait for all async task to be completed
+  await Promise.all(tasks).catch(onError);
 
-    // ! wait for all async task to be completed
-    await Promise.all(tasks).catch(onError);
-
-    if (Object.keys(commits).length) {
-      // ! run a batch of commits on docs
-      const batch = fs.batch();
-      if (Object.keys(updateCurrentDoc).length && changes.after.exists) {
-        // ! if compney doc is updated from fn change "updatedFromLisner"
-        updateCurrentDoc["updatedFromLisner"] = fieldValue.increment(1);
-        batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), updateCurrentDoc);
-      }
-      for (const docPath in commits) {
-        if (Object.prototype.hasOwnProperty.call(commits, docPath)) {
-          const query = commits[docPath];
-          switch (query.type) {
-            case "create":
-              batch.create(fs.doc(docPath), query.data);
-              break;
-            case "delete":
-              batch.delete(fs.doc(docPath));
-              break;
-            case "update":
-              batch.update(fs.doc(docPath), query.data);
-              break;
-            case "set":
-              batch.set(fs.doc(docPath), query.data);
-              break;
-          }
-        }
-      }
-      await batch
-        .commit()
-        .then(() => null)
-        .catch(onError);
-    } else if (Object.keys(updateCurrentDoc).length && changes.after.exists) {
+  if (Object.keys(commits).length) {
+    // ! run a batch of commits on docs
+    const batch = fs.batch();
+    if (Object.keys(updateCurrentDoc).length && changes.after.exists) {
       // ! if compney doc is updated from fn change "updatedFromLisner"
       updateCurrentDoc["updatedFromLisner"] = fieldValue.increment(1);
-      await fs
-        .doc(`DISTRIBUTOR/${compneyID}`)
-        .update(updateCurrentDoc)
-        .then(() => null)
-        .catch(onError);
+      batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), updateCurrentDoc);
     }
+    for (const docPath in commits) {
+      if (Object.prototype.hasOwnProperty.call(commits, docPath)) {
+        const query = commits[docPath];
+        switch (query.type) {
+          case "create":
+            batch.create(fs.doc(docPath), query.data);
+            break;
+          case "delete":
+            batch.delete(fs.doc(docPath));
+            break;
+          case "update":
+            batch.update(fs.doc(docPath), query.data);
+            break;
+          case "set":
+            batch.set(fs.doc(docPath), query.data);
+            break;
+        }
+      }
+    }
+    await batch
+      .commit()
+      .then(() => null)
+      .catch(onError);
+  } else if (Object.keys(updateCurrentDoc).length && changes.after.exists) {
+    // ! if compney doc is updated from fn change "updatedFromLisner"
+    updateCurrentDoc["updatedFromLisner"] = fieldValue.increment(1);
+    await fs
+      .doc(`DISTRIBUTOR/${compneyID}`)
+      .update(updateCurrentDoc)
+      .then(() => null)
+      .catch(onError);
   }
 }
