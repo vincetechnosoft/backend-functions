@@ -1,8 +1,9 @@
 import { EventContext, logger } from "firebase-functions/v1";
-import { fieldValue, formatedDate, fromNow, fs, bucket } from "../utils";
+import { formatedDate, fromDate } from "../utils";
+import { fieldValue, fs, bucket } from "../setup";
 
 export default async function DISTRIBUTORmonthlyRun(_: EventContext) {
-  const currentMonth = formatedDate(fromNow({ day: -1 })).substring(0, 7);
+  const currentMonth = formatedDate(fromDate({ day: -1 })).substring(0, 7);
   const distributor = (await fs.doc("CONFIG/DISTRIBUTOR").get()).data();
   const tasks: Array<Promise<null>> = [];
 

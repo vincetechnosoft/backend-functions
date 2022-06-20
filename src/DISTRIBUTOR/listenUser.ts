@@ -1,6 +1,7 @@
 import { Change, EventContext } from "firebase-functions/v1";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
-import { fieldValue, fs, getUser } from "../utils";
+import { getUser } from "../utils";
+import { fieldValue, fs } from "../setup";
 
 export default async function DISTRIBUTORlistenUser(
   changes: Change<DocumentSnapshot>,

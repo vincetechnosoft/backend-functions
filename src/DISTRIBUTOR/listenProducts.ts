@@ -1,6 +1,7 @@
 import { Change, EventContext } from "firebase-functions/v1";
 import { QueryDocumentSnapshot } from "firebase-functions/v1/firestore";
-import { fieldValue, fs, timeStamp } from "../utils";
+import { timeStamp } from "../utils";
+import { fieldValue, fs } from "../setup";
 
 export default async function DISTRIBUTORlistenProducts(
   changes: Change<QueryDocumentSnapshot>,

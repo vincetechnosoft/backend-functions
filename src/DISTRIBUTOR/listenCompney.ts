@@ -1,19 +1,22 @@
 import { Change, EventContext } from "firebase-functions/v1";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 import {
+  applyCompneyExpireDate,
+  removeCompneyExpireDate,
+  setPendingClaims,
+  setUserClaims,
+} from "../configData";
+import {
   auth,
-  db,
   fieldValue,
   fs,
   onError,
   bucket,
-  timeStamp,
-  validatePhoneForE164,
   claimType,
-  setUserClaims,
   obj,
   getObject,
-} from "../utils";
+} from "../setup";
+import { timeStamp, validatePhoneForE164 } from "../utils";
 
 async function applyClaims(
   phoneNumber: string,
@@ -31,18 +34,21 @@ async function applyClaims(
   const user = await auth.getUserByPhoneNumber(phoneNumber).catch(() => null);
   if (user === null) {
     // ! keep claims in pending state
-    const ref = db
-      .ref("pendingClaimsOfPhoneNumber")
-      .child(phoneNumber)
-      .child(`${claimType.distributor}-${compneyID}`);
-
-    if (!role || role == "disable") {
-      return await ref.remove().then(
-        () => null,
-        (e) => onError(e) || false
-      );
-    }
-    return await ref.set(role === "owner" ? 0 : 1).then(
+    const node = `${claimType.distributor}-${compneyID}`;
+    let promice;
+    if (!role) {
+      promice = setPendingClaims(phoneNumber, node, null);
+    } else if (role == "disable") {
+      promice = setPendingClaims(phoneNumber, node, -1);
+    } else if (role === "owner") {
+      promice = setPendingClaims(phoneNumber, node, 0);
+    } else if (role === "worker") {
+      promice = setPendingClaims(phoneNumber, node, function (x) {
+        if (x === 0) throw Error("owner can't be workers");
+        return 1;
+      });
+    } else return null;
+    return await promice.then(
       () => null,
       (e) => onError(e) || false
     );
@@ -132,6 +138,7 @@ function initCompney({
   commits,
   compneyID,
   changes,
+  tasks,
 }: {
   changes: Change<DocumentSnapshot>;
   compneyID: string;
@@ -141,7 +148,9 @@ function initCompney({
       | { data: obj; type: "update" | "create" | "set" }
       | { type: "delete" };
   };
+  tasks: Promise<null>[];
 }) {
+  tasks.push(applyCompneyExpireDate("distributor", compneyID, "free").then());
   updateCurrentDoc["logsInCurrentPage"] = 1;
   updateCurrentDoc["currentLogPageNum"] = 1;
   commits[`DISTRIBUTOR/${compneyID}/LOGS/page-1`] = {
@@ -190,6 +199,7 @@ function deleteCompney({
   };
   tasks: Promise<null>[];
 }) {
+  tasks.push(removeCompneyExpireDate("distributor", compneyID, false).then());
   commits["CONFIG/DISTRIBUTOR"] = {
     data: { [compneyID]: fieldValue.delete() },
     type: "update",
@@ -314,6 +324,7 @@ function disableCompney({
   compneyID: string;
   tasks: Promise<null>[];
 }) {
+  tasks.push(removeCompneyExpireDate("distributor", compneyID, true).then());
   for (const phoneNumber of Object.keys(areOwner)) {
     tasks.push(
       applyClaims(phoneNumber, compneyID, "disable").then(() => null, onError)
@@ -418,7 +429,7 @@ export default async function DISTRIBUTORlistenCompney(
   });
 
   if (!changes.before.exists) {
-    initCompney({ changes, commits, compneyID, updateCurrentDoc });
+    initCompney({ changes, commits, compneyID, updateCurrentDoc, tasks });
   } else if (!changes.after.exists) {
     deleteCompney({ changes, commits, compneyID, tasks });
   } else {

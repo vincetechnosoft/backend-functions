@@ -1,6 +1,7 @@
 import { Change, EventContext } from "firebase-functions/v1";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
-import { getUser, fieldValue, fs, timeStamp, getArray } from "../utils";
+import { getUser, timeStamp } from "../utils";
+import { fieldValue, fs, getArray } from "../setup";
 
 function updateInventory({
   changes,

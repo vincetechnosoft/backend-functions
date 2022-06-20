@@ -1,28 +1,5 @@
-import * as admin from "firebase-admin";
-import { database, firestore } from "firebase-admin";
-import * as functions from "firebase-functions";
-import { Change } from "firebase-functions";
-import { DocumentSnapshot } from "firebase-functions/v1/firestore";
-
-const app = admin.initializeApp();
-
-export const db = app.database();
-export const auth = app.auth();
-export const fs = app.firestore();
-export const bucket = app.storage().bucket();
-export const apkBucket = app.storage().bucket("vincetechnosoft-applications");
-export const fieldValue = firestore.FieldValue;
-export const fieldPath = firestore.FieldPath;
-
-export function log(obj: any) {
-  return db
-    .ref(`logs/${timeStamp()}`)
-    .set(obj)
-    .then(
-      () => null,
-      () => null
-    );
-}
+import { database } from "firebase-admin";
+import { auth, db } from "./setup";
 
 export function now() {
   const date = new Date();
@@ -31,12 +8,38 @@ export function now() {
   return date;
 }
 
-export function fromNow(duration: { day?: number; hr?: number; min?: number }) {
-  const date = now();
-  if (duration.day) date.setDate(date.getDate() + duration.day);
-  if (duration.hr) date.setHours(date.getHours() + duration.hr);
+export function fromDate(
+  duration: {
+    day?: number;
+    hr?: number;
+    min?: number;
+    month?: number;
+    year?: number;
+  },
+  date?: Date
+) {
+  date ??= now();
   if (duration.min) date.setMinutes(date.getMinutes() + duration.min);
+  if (duration.hr) date.setHours(date.getHours() + duration.hr);
+  if (duration.day) date.setDate(date.getDate() + duration.day);
+  if (duration.month) date.setMonth(date.getMonth() + duration.month);
+  if (duration.year) date.setFullYear(date.getFullYear() + duration.year);
   return date;
+}
+
+export function dateFromTimeStamp(timeStamp: string, orElse?: () => Date) {
+  orElse ??= now;
+  try {
+    if (typeof timeStamp !== "string" || timeStamp.length < 16) return orElse();
+    const year = -timeStamp.substring(0, 4);
+    const month = -timeStamp.substring(5, 7);
+    const date = -timeStamp.substring(8, 10);
+    const hr = -timeStamp.substring(11, 13);
+    const min = -timeStamp.substring(14, 16);
+    return new Date(Date.UTC(-year, -1 - month, -date, -hr, -min));
+  } catch {
+    return orElse();
+  }
 }
 
 export function timeStamp(date?: Date) {
@@ -51,14 +54,8 @@ export function formatedDate(date?: Date) {
   return (date ?? now()).toISOString().substring(0, 10);
 }
 
-export const indianFn = functions.region("asia-south1");
 export function validatePhoneForE164(phoneNumber: string) {
   return /^\+[1-9]\d{10,14}$/.test(phoneNumber);
-}
-
-export function onError(err: any) {
-  functions.logger.error(err);
-  return null;
 }
 
 export function debugLog(arg: any) {
@@ -71,6 +68,7 @@ export function debugLog(arg: any) {
       () => null
     );
 }
+
 export function handle(handler: (...args: any[]) => any) {
   return async function (...args: any[]) {
     try {
@@ -114,33 +112,4 @@ export async function getUser({
   } catch {
     return await auth.createUser({ phoneNumber });
   }
-}
-
-export const claimType = {
-  distributor: "D",
-};
-
-export interface obj<T = any> {
-  [key: string]: T;
-}
-export function getObject<T = any>(
-  changes: Change<DocumentSnapshot>,
-  path: string
-): [obj<T>, obj<T>] {
-  let oldObj = changes.before.get(path);
-  if (typeof oldObj !== "object" || oldObj === null) oldObj = {};
-  let newObj = changes.after.get(path);
-  if (typeof newObj !== "object" || newObj === null) newObj = {};
-  return [oldObj, newObj];
-}
-
-export function getArray<T = any>(
-  changes: Change<DocumentSnapshot>,
-  path: string
-): [T[], T[]] {
-  let oldObj = changes.before.get(path);
-  if (!Array.isArray(oldObj)) oldObj = [];
-  let newObj = changes.after.get(path);
-  if (!Array.isArray(newObj)) newObj = [];
-  return [oldObj, newObj];
 }

@@ -1,7 +1,8 @@
 import { Change, EventContext, logger } from "firebase-functions/v1";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
+import { handle } from "../configData";
 import DISTRIBUTORlistenUser from "../DISTRIBUTOR/listenUser";
-import { bucket, handle } from "../utils";
+import { bucket } from "../setup";
 
 async function allUserLisiners(
   changes: Change<DocumentSnapshot>,

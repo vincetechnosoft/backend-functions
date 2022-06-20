@@ -1,6 +1,6 @@
 import { EventContext } from "firebase-functions/v1";
 import { ObjectMetadata } from "firebase-functions/v1/storage";
-import { fs, apkBucket } from "../utils";
+import { fs, apkBucket } from "../setup";
 
 interface AppInfoParserRes {
   versionCode: number;

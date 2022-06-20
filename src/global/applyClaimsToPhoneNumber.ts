@@ -1,6 +1,8 @@
 import { Change, EventContext } from "firebase-functions/v1";
 import { DataSnapshot } from "firebase-functions/v1/database";
-import { auth, log, setUserClaims, validatePhoneForE164 } from "../utils";
+import { log, setUserClaims } from "../configData";
+import { auth } from "../setup";
+import { validatePhoneForE164 } from "../utils";
 
 export default async function applyClaimsToPhoneNumber(
   changes: Change<DataSnapshot>,

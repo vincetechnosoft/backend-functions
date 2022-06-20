@@ -1,25 +1,23 @@
 import { EventContext } from "firebase-functions/v1";
 import { UserRecord } from "firebase-functions/v1/auth";
-import { db, fs, bucket, timeStamp, setUserClaims, obj } from "../utils";
+import { timeStamp } from "../utils";
+import { fs, bucket, obj } from "../setup";
 import DISTRIBUTORonUser from "../DISTRIBUTOR/onUser";
+import { applyPendingClaims, setUserClaims } from "../configData";
 
 export default {
   async create(user: UserRecord, _: EventContext) {
     const phoneNumber = user.phoneNumber;
     if (!phoneNumber) return;
-    const ref = db.ref("pendingClaimsOfPhoneNumber").child(phoneNumber);
-    const claims = (await ref.get().catch(() => null))?.val() ?? null;
-    await ref.remove().catch(() => null);
+    const [claims, res] = await applyPendingClaims({
+      uid: user.uid,
+      phoneNumber,
+    });
+
     const setUserDoc: obj = {};
     const batch = fs.batch();
 
-    if (claims) {
-      const res = await setUserClaims(user.uid, claims).then(
-        () => true,
-        () => false
-      );
-      DISTRIBUTORonUser.create({ batch, claims, phoneNumber, res });
-    }
+    if (claims) DISTRIBUTORonUser.create({ batch, claims, phoneNumber, res });
 
     setUserDoc.createdAt = timeStamp();
     await batch

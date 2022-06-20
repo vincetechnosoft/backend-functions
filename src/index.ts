@@ -1,4 +1,5 @@
-import { indianFn, handle } from "./utils";
+import { indianFn } from "./setup";
+import { handle } from "./configData";
 
 // ? distributor imports
 import DISTRIBUTORmonthlyRun from "./DISTRIBUTOR/monthlyRun";
@@ -11,11 +12,16 @@ import applyClaimsToPhoneNumber from "./global/applyClaimsToPhoneNumber";
 import onUser from "./global/onUser";
 import apkChanges from "./global/apkChanges";
 import listenUserGlobaly from "./global/listenUser";
+import dailyRun from "./global/runDaily";
+import applyCompneyLife from "./global/applyCompneyLife";
 
 // ! global apis
 exports.applyClaimsToPhoneNumber = indianFn.database
   .ref("applyClaimsToPhoneNumber/{phoneNumber}")
   .onWrite(handle(applyClaimsToPhoneNumber));
+exports.applyCompneyLife = indianFn.database
+  .ref("expiresAt/{id}")
+  .onWrite(handle(applyCompneyLife));
 exports.onUserCreated = indianFn.auth.user().onCreate(handle(onUser.create));
 exports.onUserDeleted = indianFn.auth.user().onDelete(handle(onUser.delete));
 exports.apkChanges = indianFn.storage
@@ -25,6 +31,10 @@ exports.apkChanges = indianFn.storage
 exports.listenUserGlobaly = indianFn.firestore
   .document("USERS/{uid}")
   .onUpdate(handle(listenUserGlobaly));
+exports.dailyRun = indianFn.pubsub
+  .schedule("1 0 * * *")
+  .timeZone("Asia/Kolkata")
+  .onRun(handle(dailyRun));
 
 // ! DISTRIBUTOR apis
 exports.DISTRIBUTORlistenCompney = indianFn.firestore
