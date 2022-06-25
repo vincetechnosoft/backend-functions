@@ -14,6 +14,9 @@ import apkChanges from "./global/apkChanges";
 import listenUserGlobaly from "./global/listenUser";
 import dailyRun from "./global/runDaily";
 import applyCompneyLife from "./global/applyCompneyLife";
+import PUBLICcontactUs from "./public/contactUs";
+import PUBLICcareers from "./public/careers";
+import PUBLIClistenPublic from "./public/listenPublic";
 
 // ! global apis
 exports.applyClaimsToPhoneNumber = indianFn.database
@@ -22,8 +25,12 @@ exports.applyClaimsToPhoneNumber = indianFn.database
 exports.applyCompneyLife = indianFn.database
   .ref("expiresAt/{id}")
   .onWrite(handle(applyCompneyLife));
-exports.onUserCreated = indianFn.auth.user().onCreate(handle(onUser.create));
-exports.onUserDeleted = indianFn.auth.user().onDelete(handle(onUser.delete));
+exports.onUserCreated = indianFn.auth
+  .user()
+  .onCreate(handle(onUser.onUserCreate));
+exports.onUserDeleted = indianFn.auth
+  .user()
+  .onDelete(handle(onUser.onUserDelete));
 exports.apkChanges = indianFn.storage
   .bucket("vincetechnosoft-applications")
   .object()
@@ -35,6 +42,13 @@ exports.dailyRun = indianFn.pubsub
   .schedule("1 0 * * *")
   .timeZone("Asia/Kolkata")
   .onRun(handle(dailyRun));
+
+// ! PUBLIC apis
+exports.PUBLICcontactUs = indianFn.https.onCall(PUBLICcontactUs);
+exports.PUBLICcareers = indianFn.https.onCall(PUBLICcareers);
+exports.PUBLIClistenPublic = indianFn.firestore
+  .document("PUBLIC/{type}")
+  .onUpdate(handle(PUBLIClistenPublic));
 
 // ! DISTRIBUTOR apis
 exports.DISTRIBUTORlistenCompney = indianFn.firestore

@@ -113,3 +113,9 @@ export async function getUser({
     return await auth.createUser({ phoneNumber });
   }
 }
+
+let _sizeOf: (object: object) => number;
+export async function sizeIsAbove(data: any, bytes: number) {
+  _sizeOf ??= (await import("firestore-size")).default;
+  return _sizeOf(data) > bytes;
+}

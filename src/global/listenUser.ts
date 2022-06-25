@@ -3,6 +3,7 @@ import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 import { handle } from "../configData";
 import DISTRIBUTORlistenUser from "../DISTRIBUTOR/listenUser";
 import { bucket } from "../setup";
+import { sizeIsAbove } from "../utils";
 
 async function allUserLisiners(
   changes: Change<DocumentSnapshot>,
@@ -21,10 +22,9 @@ export default async function listenUserGlobaly(
 ) {
   const lisiners = allUserLisiners(changes, context);
   const { uid } = context.params;
-  const { default: sizeof } = await import("firestore-size");
   const data = changes.after.data()!;
 
-  if (sizeof(data) > 943718) {
+  if (await sizeIsAbove(data, 943718)) {
     //! data > 90% of 1mb
     let lastPageNumber = data["lastPageNumber"];
     if (typeof lastPageNumber !== "number") lastPageNumber = 0;

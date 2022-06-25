@@ -1,13 +1,11 @@
 import { claimType, fieldValue, fs, obj } from "../setup";
 
 export default {
-  create({
-    batch,
+  async DISTRIBUTORonUserCreate({
     claims,
     phoneNumber,
     res,
   }: {
-    batch: FirebaseFirestore.WriteBatch;
     res: boolean;
     phoneNumber: string;
     claims: obj;
@@ -18,19 +16,23 @@ export default {
       .map(([k, v]) => [k.substring(cT.length), v]);
     for (const [compneyID, role] of distributorClaims) {
       if (role === 0) {
-        batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
-          [`owners.${phoneNumber}.status`]: res ? 1 : -1,
-          updatedFromLisner: fieldValue.increment(1),
-        });
+        fs.doc(`DISTRIBUTOR/${compneyID}`)
+          .update({
+            [`owners.${phoneNumber}.status`]: res ? 1 : -1,
+            updatedFromLisner: fieldValue.increment(1),
+          })
+          .catch(() => null);
       } else if (role === 1) {
-        batch.update(fs.doc(`DISTRIBUTOR/${compneyID}`), {
-          [`workers.${phoneNumber}.status`]: res ? 1 : -1,
-          updatedFromLisner: fieldValue.increment(1),
-        });
+        fs.doc(`DISTRIBUTOR/${compneyID}`)
+          .update({
+            [`workers.${phoneNumber}.status`]: res ? 1 : -1,
+            updatedFromLisner: fieldValue.increment(1),
+          })
+          .catch(() => null);
       }
     }
   },
-  delete({
+  async DISTRIBUTORonUserDelete({
     batch,
     claims,
     phoneNumber,

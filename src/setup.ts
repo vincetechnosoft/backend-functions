@@ -14,6 +14,7 @@ export const apkBucket = app.storage().bucket("vincetechnosoft-applications");
 export const fieldValue = firestore.FieldValue;
 export const fieldPath = firestore.FieldPath;
 export const indianFn = functions.region("asia-south1");
+export const httpsError = functions.https.HttpsError;
 
 export const claimType = {
   distributor: "D",

@@ -332,7 +332,7 @@ function disableCompney({
   }
   for (const phoneNumber of Object.keys(areWorker)) {
     tasks.push(
-      applyClaims(phoneNumber, compneyID, "disable").then(() => null, onError)
+      applyClaims(phoneNumber, compneyID, null).then(() => null, onError)
     );
   }
 }
