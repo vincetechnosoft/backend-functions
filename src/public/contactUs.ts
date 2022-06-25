@@ -9,7 +9,7 @@ interface FormData {
   message: string;
 }
 
-export default function PUBLICcontactUs(
+export default async function PUBLICcontactUs(
   data: FormData,
   context: CallableContext
 ) {
@@ -29,7 +29,7 @@ export default function PUBLICcontactUs(
     throw new httpsError("invalid-argument", "Wrong formate given");
   }
   try {
-    fs.doc("PUBLIC/CONTACT-US").update({
+    await fs.doc("PUBLIC/CONTACT-US").update({
       [formatedDate()]: fieldValue.arrayUnion({
         e: data.email,
         n: data.fullName,

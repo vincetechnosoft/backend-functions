@@ -12,7 +12,7 @@ interface FormData {
   cv: string;
 }
 
-export default function PUBLICcareers(
+export default async function PUBLICcareers(
   data: FormData,
   context: CallableContext
 ) {
@@ -39,7 +39,7 @@ export default function PUBLICcareers(
     throw new httpsError("invalid-argument", "Wrong formate given");
   }
   try {
-    fs.doc("PUBLIC/CAREERS").update({
+    await fs.doc("PUBLIC/CAREERS").update({
       [formatedDate()]: fieldValue.arrayUnion({
         e: data.email,
         n: data.fullName,
